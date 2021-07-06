@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+</head>
+<body>
+    <ul>
+        <li th:each="msg: ${ftpMessages}">
+            <a th:href="${msg.absoluteUrl}"><span th:text="${msg.name}">--</span></a>
+        </li><br/>
+    </ul>
+</body>

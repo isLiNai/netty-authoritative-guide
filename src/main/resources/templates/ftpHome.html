@@ -1,0 +1,178 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="../static/zTree_v3/css/zTreeStyle/zTreeStyle.css" type="text/css">
+    <script type="text/javascript" src="../static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/zTree_v3/js/jquery.ztree.core.js"></script>
+    <script type="text/javascript" src="../static/js/ajaxfileupload.js"></script>
+    <script src="../static/layer/layer.js"></script>
+    <style type="text/css">
+        .ztree li span.button.pIcon01_ico_open{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/1_open.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.pIcon01_ico_close{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/1_close.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.pIcon02_ico_open, .ztree li span.button.pIcon02_ico_close{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/2.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.icon01_ico_docu{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/3.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.icon02_ico_docu{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/4.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.icon03_ico_docu{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/5.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.icon04_ico_docu{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/6.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.icon05_ico_docu{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/7.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+        .ztree li span.button.icon06_ico_docu{margin-right:2px; background: url(../static/zTree_v3/css/zTreeStyle/img/diy/8.png) no-repeat scroll 0 0 transparent; vertical-align:top; *vertical-align:middle}
+
+        div#rMenu {position:absolute; visibility:hidden; top:0; text-align: left;padding: 2px;}
+        div#rMenu ul li{
+            margin: 1px 0;
+            padding: 0 5px;
+            cursor: pointer;
+            list-style: none outside none;
+            background-color: #DFDFDF;
+        }
+    </style>
+
+
+    <SCRIPT LANGUAGE="JavaScript">
+        var zTreeObj;
+        // zTree 的参数配置，深入使用请参考 API 文档（setting 配置详解）
+        var setting = {
+            view: {
+                selectedMulti: false
+            },
+            async:{
+                type: "get",
+                enable: true,
+                url:"getFiles",
+                autoParam:["id"],
+                otherParam:[],
+                dataFilter: filter
+            },
+            callback: {
+                beforeClick: beforeClick,
+                beforeAsync: beforeAsync,
+                onAsyncError: onAsyncError,
+                onAsyncSuccess: onAsyncSuccess,
+                onRightClick: OnRightClick
+            }
+        };
+        var zTree, rMenu;
+        $(document).ready(function(){
+            initTree();
+        });
+
+        function initTree() {
+            $.get("/templates/getFiles?id=a56a4a824d2de2ebe46fbf07b5a496ac", function (zNodesStr) {
+                var zNodes = JSON.parse(zNodesStr);
+                console.log(zNodes);
+                zTreeObj = $.fn.zTree.init($("#treeDemo"), setting, zNodes);
+            })
+            zTree = $.fn.zTree.init($("#treeDemo"));
+            rMenu = $("#rMenu");
+        }
+
+        function beforeClick(treeId, treeNode) {
+            if (!treeNode.isParent) {
+                window.location.href = "/templates/getFiles?id="+treeNode.id;
+                return true;
+            } else {
+                return true;
+            }
+        }
+
+        function filter(treeId, parentNode, childNodes) {
+            if (!childNodes) return null;
+            for (var i=0, l=childNodes.length; i<l; i++) {
+                childNodes[i].name = childNodes[i].name.replace(/\.n/g, '.');
+            }
+            return childNodes;
+        }
+
+        function beforeAsync(treeId, treeNode) {
+            showLog( "beforeAsync");
+            return true;
+        }
+        function onAsyncError(event, treeId, treeNode, XMLHttpRequest, textStatus, errorThrown) {
+            showLog( "onAsyncError");
+        }
+        function onAsyncSuccess(event, treeId, treeNode, msg) {
+            showLog( "onAsyncSuccess");
+        }
+
+        function showLog(str) {
+            console.log(str);
+        }
+
+        function OnRightClick(event, treeId, treeNode) {
+            zTree.selectNode(treeNode);
+            showRMenu(event.clientX, event.clientY);
+        }
+
+        function showRMenu( x, y) {
+            $("#rMenu ul").show();
+            y += document.body.scrollTop-10;
+            x += document.body.scrollLeft-22;
+            rMenu.css({"top":y+"px", "left":x+"px", "visibility":"visible"});
+
+            $("body").bind("mousedown", onBodyMouseDown);
+        }
+
+        function hideRMenu() {
+            if (rMenu) rMenu.css({"visibility": "hidden"});
+            $("body").unbind("mousedown", onBodyMouseDown);
+        }
+
+        function onBodyMouseDown(event){
+            if (!(event.target.id == "rMenu" || $(event.target).parents("#rMenu").length>0)) {
+                rMenu.css({"visibility" : "hidden"});
+            }
+        }
+
+        function addTreeNode() {
+            $("#file").trigger("click");
+        }
+
+        function ajaxFileUpload() {
+            var id = zTree.getSelectedNodes()[0].id;
+            $.ajaxFileUpload
+            (
+                {
+                    url: '/upload/file', //用于文件上传的服务器端请求地址
+                    secureuri: false, //是否需要安全协议，一般设置为false
+                    fileElementId: 'file', //文件上传域的ID
+                    dataType: 'json', //返回值类型 一般设置为json
+                    type : 'post',
+                    data:{'id': id},
+                    success: function (data, status)  //服务器成功响应处理函数
+                    {
+                        successUpload();
+                    },
+                    error: function (data, status, e)//服务器响应失败处理函数
+                    {
+                        successUpload();
+                    }
+                }
+            )
+            return false;
+        }
+
+        function successUpload() {
+            layer.msg('上传成功', {time: 2000, icon: 6});
+            initTree();
+            hideRMenu();
+        }
+
+    </SCRIPT>
+
+</head>
+<body>
+<div>
+    <ul id="treeDemo" class="ztree">
+    </ul>
+</div>
+
+<div id="rMenu">
+    <ul>
+        <li id="m_add" onclick="addTreeNode()">增加节点</li>
+    </ul>
+</div>
+
+<p><input type="file" id="file" name="file" onchange="ajaxFileUpload()" hidden/></p>
+
+</body>
+</html>
